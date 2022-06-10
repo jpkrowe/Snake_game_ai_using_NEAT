@@ -2,12 +2,13 @@ import pygame
 import neat
 import os
 import random
+import numpy as np
 pygame.font.init()
 
 
 # define screen size
-GRID_X = 30
-GRID_Y = 30
+GRID_X = 50
+GRID_Y = 50
 SNAKE_WIDTH = 10
 WIN_WIDTH = GRID_X * SNAKE_WIDTH
 WIN_HEIGHT = GRID_Y * SNAKE_WIDTH
@@ -134,10 +135,10 @@ def draw_window(win, snake, food, score):
 
     food.draw(win)
 
-    text = STAT_FONT.render("Score: " + str(score), 1, (255, 255, 255))
+    text = STAT_FONT.render("Score: " + str(score), True, (255, 255, 255))
     win.blit(text, (WIN_WIDTH - 10 - text.get_width(), 10))
 
-    text = STAT_FONT.render("Gen: " + str(GEN), 1, (255, 255, 255))
+    text = STAT_FONT.render("Gen: " + str(GEN), True, (255, 255, 255))
     win.blit(text, (10, 10))
 
 
@@ -200,15 +201,13 @@ def main(genomes, config):
 
             foodDistance = (snake[0].xcoord - food.xcoord)**2 + (snake[0].ycoord - food.ycoord)**2
 
-            output = nets[i].activate((foodDistance, inputs[0], inputs[1], inputs[2]))
-            if output[0] > 0.5 and output[1] > 0.5:
-                pass
-            elif output[0] > 0.5:
+            output = np.array(nets[i].activate((foodDistance, inputs[0], inputs[1], inputs[2])))
+            # represent outputs as softmax probabilities
+            probs = np.exp(output)/np.exp(output).sum()
+            choice = probs.argmax()
+            if choice != 2:
+                snake[0].rotate(choice)
 
-                snake[0].rotate(1)
-
-            elif output[1] > 0.5:
-                snake[0].rotate(2)
 
             # moves the snake
             snake[0].move()
